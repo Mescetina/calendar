@@ -189,7 +189,7 @@ class Event implements Comparable<Event> {
 				viewers += ", ";
 			}
 			UUID viewer = this.viewers.get(i);
-			viewers += CalendarManager.getUser(viewer).username;
+			viewers += CalendarManager.getCalendarManager().getUser(viewer).username;
 		}
 		return viewers;
 	}

@@ -51,7 +51,7 @@ class CountdownTimer {
 	public String toString() {
 		return "Timer ID: " + this.timerID + "\n"
 				+ "Timer name: " + this.name + "\n"
-				+ "Timer creator: " + CalendarManager.getUser(this.owner).username + "\n"
+				+ "Timer creator: " + CalendarManager.getCalendarManager().getUser(this.owner).username + "\n"
 				+ "End Time: " + this.endTime + "\n"
 				+ "Time remaining: " + calcRemainingTime();
 	}

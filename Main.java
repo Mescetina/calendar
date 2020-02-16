@@ -17,7 +17,7 @@ public class Main {
 
 	public static void main(String[] args) {
 		int timezone = OffsetDateTime.now().getOffset().getTotalSeconds();
-		calendarManager = new CalendarManager(timezone / 60 / 60);
+		calendarManager = CalendarManager.getCalendarManager(timezone / 60 / 60);
 
 		scanner = new Scanner(System.in);
 		int status = 1;
@@ -254,7 +254,7 @@ public class Main {
 
 		ArrayList<UUID> viewers = new ArrayList<UUID>();
 		viewers.add(calendarManager.currentUser);
-		if (ans.equals("Y") && CalendarManager.userList.size() <= 1) {
+		if (ans.equals("Y") && calendarManager.userList.size() <= 1) {
 			printUsers();
 		} else if (ans.equals("Y")) {
 			printUsers();
@@ -375,7 +375,7 @@ public class Main {
 			System.out.println("There is no event in the system!\n");
 			return;
 		}
-		if (CalendarManager.userList.size() <= 1) {
+		if (calendarManager.userList.size() <= 1) {
 			printUsers();
 			return;
 		}
@@ -468,14 +468,14 @@ public class Main {
 	}
 
 	static void printUsers() {
-		if (CalendarManager.userList.size() <= 1) {
+		if (calendarManager.userList.size() <= 1) {
 			System.out.println("There is no other user in the system.\n");
 			return;
 		}
 
 		System.out.println("*-*-*-* User List *-*-*-*\n");
-		for (int i = 0; i < CalendarManager.userList.size(); ++i) {
-			User user = CalendarManager.userList.get(i);
+		for (int i = 0; i < calendarManager.userList.size(); ++i) {
+			User user = calendarManager.userList.get(i);
 			if (user.userID != calendarManager.currentUser) {
 				System.out.println(user + "\n");				
 			}

@@ -11,15 +11,31 @@ class CalendarManager {
 
 	ArrayList<Calendar> calendarList;
 	ArrayList<CountdownTimer> timerList;
-	static ArrayList<User> userList;
+	ArrayList<User> userList;
 
-	CalendarManager(int timezone) {
+	private static CalendarManager calendarManager;
+
+	private CalendarManager(int timezone) {
 		this.calendarList = new ArrayList<Calendar>();
 		this.timerList = new ArrayList<CountdownTimer>();
-		CalendarManager.userList = new ArrayList<User>();
+		this.userList = new ArrayList<User>();
 		this.currentUser = null;
 		this.theme = CalendarTheme.LIGHT;
 		this.timezone = timezone;
+	}
+
+	public static CalendarManager getCalendarManager() {
+		if (calendarManager == null) {
+			throw new Error("You must create a calendar manager with an appropriate time zone first");
+		}
+		return calendarManager;
+	}
+
+	public static CalendarManager getCalendarManager(int timezone) {
+		if (calendarManager == null) {
+			calendarManager = new CalendarManager(timezone);
+		}
+		return calendarManager;
 	}
 
 	void setTheme(CalendarTheme theme) {
@@ -59,9 +75,9 @@ class CalendarManager {
 		userList.add(user);
 	}
 
-	static User getUser(UUID userID) {
-		for (int i = 0; i < userList.size(); ++i) {
-			User user = userList.get(i);
+	User getUser(UUID userID) {
+		for (int i = 0; i < this.userList.size(); ++i) {
+			User user = this.userList.get(i);
 			if (user.userID.equals(userID)) {
 				return user;
 			}

@@ -64,7 +64,7 @@ class Calendar {
 		return (this.isPublic ? "Public" : "Private") + " calendar" + "\n"
 				+ "Calendar ID: " + this.calendarID + "\n"
 				+ "Calendar Name: " + this.name + "\n"
-				+ "Calendar Creator: " + CalendarManager.getUser(owner).username + "\n"
+				+ "Calendar Creator: " + CalendarManager.getCalendarManager().getUser(owner).username + "\n"
 				+ "Calendar Visibility: " + (this.isVisible ? "visible" : "hidden");
 	}
 
