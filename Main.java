@@ -129,10 +129,7 @@ public class Main {
 			return;
 		}
 
-		printCalendars(false);
-		// very user unfriendly, will improve later
-		System.out.print("Please select a calendar to delete (enter calendar ID): ");
-		UUID calendarID = UUID.fromString(scanner.nextLine());
+		UUID calendarID = getCalendarID("Please select a calendar to delete (enter calendar ID): ");
 		calendarManager.removeCalendar(calendarID);
 		System.out.println("Calendar is deleted!\n");
 	}
@@ -143,22 +140,11 @@ public class Main {
 			return;
 		}
 
-		printCalendars(false);
-
-		// very user unfriendly, will improve later
-		System.out.print("Please select a calendar to update (enter calendar ID): ");
-		UUID calendarID = UUID.fromString(scanner.nextLine());
+		UUID calendarID = getCalendarID("Please select a calendar to update (enter calendar ID): ");
 		Calendar calendar = calendarManager.getCalendar(calendarID);
 		System.out.println();
 
-		System.out.println("*-*-*-* Calendar Settings *-*-*-*\n\n"
-				+ "[1] Change calendar name\n"
-				+ "[2] Change calendar's accessibility (public / private)\n"
-				+ "[3] Change calendar's visibility");
-		System.out.print("Please select an option to continue (enter the number): ");
-		int operation = Integer.parseInt(scanner.nextLine());
-		System.out.println();
-
+		int operation = printCalendarSettings();
 		if (operation == 1) {
 			System.out.print("Enter the new name: ");
 			String name = scanner.nextLine();
@@ -176,6 +162,17 @@ public class Main {
 		System.out.println();
 	}
 
+	static int printCalendarSettings() {
+		System.out.println("*-*-*-* Calendar Settings *-*-*-*\n\n"
+				+ "[1] Change calendar name\n"
+				+ "[2] Change calendar's accessibility (public / private)\n"
+				+ "[3] Change calendar's visibility");
+		System.out.print("Please select an option to continue (enter the number): ");
+		int operation = Integer.parseInt(scanner.nextLine());
+		System.out.println();
+		return operation;
+	}
+
 	static void printCalendars(Boolean includePublic) {
 		ArrayList<Calendar> calendars = calendarManager.getCalendars(calendarManager.currentUser, includePublic);
 		if (calendars.size() <= 0) {
@@ -190,6 +187,13 @@ public class Main {
 		}
 	}
 
+	static UUID getCalendarID(String query) {
+		printCalendars(false);
+		System.out.print(query);
+		UUID calendarID = UUID.fromString(scanner.nextLine());
+		return calendarID;
+	}
+
 	static void addEvent() {
 		if (calendarManager.getCalendars(calendarManager.currentUser, false).size() <= 0) {
 			System.out.println("There is no calendar in the system.\n");
@@ -200,12 +204,10 @@ public class Main {
 		String eventTitle = scanner.nextLine();
 		System.out.println();
 
-		System.out.print("Start time [i.e. 2017-12-03T10:15:30]: ");
-		LocalDateTime startTime = LocalDateTime.parse(scanner.nextLine());
+		LocalDateTime startTime = getTime("Start time [i.e. 2017-12-03T10:15:30]: ");
 		System.out.println();
 
-		System.out.print("End time [i.e. 2017-12-03T11:15:30]: ");
-		LocalDateTime endTime = LocalDateTime.parse(scanner.nextLine());
+		LocalDateTime endTime = getTime("End time [i.e. 2017-12-03T11:15:30]: ");
 		System.out.println();
 
 		System.out.print("Is this event repeatable (Y/N): ");
@@ -216,8 +218,7 @@ public class Main {
 		RepeatType frequency = null;
 
 		if (repeatable) {
-			System.out.print("Repeat until [i.e. 2018-12-03T10:15:30]: ");
-			repeatUntil = LocalDateTime.parse(scanner.nextLine());
+			repeatUntil = getTime("Repeat until [i.e. 2018-12-03T10:15:30]: ");
 			System.out.println();
 
 			System.out.println("Repeat frequency:\n\n"
@@ -242,11 +243,19 @@ public class Main {
 			System.out.println();
 		}
 
-		printCalendars(false);
-		System.out.print("Add to which calendar (enter calendar ID): ");
-		UUID calendarID = UUID.fromString(scanner.nextLine());
+		UUID calendarID = getCalendarID("Add to which calendar (enter calendar ID): ");
 		System.out.println();
 
+		ArrayList<UUID> viewers = getEventViewers();
+
+		Event event = new Event(eventTitle, calendarID, viewers, startTime, endTime,
+				repeatable, repeatUntil, frequency, null);
+		calendarManager.addEvent(event, calendarID);
+
+		System.out.println("Event is added!\n");
+	}
+
+	static ArrayList<UUID> getEventViewers() {
 		System.out.print("Do you want to share this event (Y/N): ");
 		String ans = scanner.nextLine();
 		System.out.println();
@@ -268,11 +277,7 @@ public class Main {
 			System.out.println();
 		}
 
-		Event event = new Event(eventTitle, calendarID, viewers, startTime, endTime,
-				repeatable, repeatUntil, frequency, null);
-		calendarManager.addEvent(event, calendarID);
-
-		System.out.println("Event is added!\n");
+		return viewers;
 	}
 
 	static void deleteEvent() {
@@ -281,9 +286,7 @@ public class Main {
 			return;
 		}
 
-		printEvents(false);
-		System.out.print("Please select an event to delete (enter event ID): ");
-		UUID eventID = UUID.fromString(scanner.nextLine());
+		UUID eventID = getEventID("Please select an event to delete (enter event ID): ");
 		calendarManager.removeEvent(eventID);
 		System.out.println("Event is deleted!\n");
 	}
@@ -294,37 +297,22 @@ public class Main {
 			return;
 		}
 
-		printEvents(false);
-
-		// very user unfriendly, will improve later
-		System.out.print("Please select an event to update (enter event ID): ");
-		UUID eventID = UUID.fromString(scanner.nextLine());
+		UUID eventID = getEventID("Please select an event to update (enter event ID): ");
 		Event event = calendarManager.getEvent(eventID);
 		System.out.println();
 
-		System.out.println("*-*-*-* Event Settings *-*-*-*\n\n"
-				+ "[1] Change event title\n"
-				+ "[2] Change event start time\n"
-				+ "[3] Change event end time\n"
-				+ "[4] Change settings related to repeating event\n"
-				+ "    (change repeat end time, change repeat frequency)");
-		System.out.print("Please select an option to continue (enter the number): ");
-		int operation = Integer.parseInt(scanner.nextLine());
-		System.out.println();
-
+		int operation = printEventSettings();
 		if (operation == 1) {
 			System.out.print("Enter the new title: ");
 			String title = scanner.nextLine();
 			event.setEventTitle(title);
 			System.out.println("Event's name is changed to " + event.title);
 		} else if (operation == 2) {
-			System.out.print("Enter the new start time [i.e. 2019-12-01T14:00:00]: ");
-			LocalDateTime startTime = LocalDateTime.parse(scanner.nextLine());
+			LocalDateTime startTime = getTime("Enter the new start time [i.e. 2019-12-01T14:00:00]: ");
 			event.setStartTime(startTime);
 			System.out.println("Event's start time is changed to " + event.startTime);
 		} else if (operation == 3) {
-			System.out.print("Enter the new end time [i.e. 2019-12-01T15:00:00]: ");
-			LocalDateTime endTime = LocalDateTime.parse(scanner.nextLine());
+			LocalDateTime endTime = getTime("Enter the new end time [i.e. 2019-12-01T15:00:00]: ");
 			event.setEndTime(endTime);
 			System.out.println("Event's end time is changed to " + event.endTime);
 		} else if (operation == 4) {
@@ -336,8 +324,7 @@ public class Main {
 			RepeatType frequency = null;
 
 			if (repeatable) {
-				System.out.print("Repeat until [i.e. 2020-12-01T14:00:00]: ");
-				repeatUntil = LocalDateTime.parse(scanner.nextLine());
+				repeatUntil = getTime("Repeat until [i.e. 2020-12-01T14:00:00]: ");
 				System.out.println();
 
 				System.out.println("Repeat frequency:\n\n"
@@ -369,6 +356,19 @@ public class Main {
 		System.out.println();
 	}
 
+	static int printEventSettings() {
+		System.out.println("*-*-*-* Event Settings *-*-*-*\n\n"
+				+ "[1] Change event title\n"
+				+ "[2] Change event start time\n"
+				+ "[3] Change event end time\n"
+				+ "[4] Change settings related to repeating event\n"
+				+ "    (change repeat end time, change repeat frequency)");
+		System.out.print("Please select an option to continue (enter the number): ");
+		int operation = Integer.parseInt(scanner.nextLine());
+		System.out.println();
+		return operation;
+	}
+
 	static void shareEvent() {
 		if (calendarManager.getEvents(calendarManager.currentUser, false).size() <= 0) {
 			System.out.println("There is no event in the system!\n");
@@ -379,9 +379,7 @@ public class Main {
 			return;
 		}
 
-		printEvents(false);
-		System.out.print("Please select an event to share with (enter event ID): ");
-		UUID eventID = UUID.fromString(scanner.nextLine());
+		UUID eventID = getEventID("Please select an event to share with (enter event ID): ");
 		Event event = calendarManager.getEvent(eventID);
 		System.out.println();
 
@@ -395,6 +393,13 @@ public class Main {
 			event.shareEventWith(UUID.fromString(viewer));
 		}
 		System.out.println();
+	}
+
+	static UUID getEventID(String query) {
+		printEvents(false);
+		System.out.print(query);
+		UUID eventID = UUID.fromString(scanner.nextLine());
+		return eventID;
 	}
 
 	static void printEvents(Boolean includePublic) {
@@ -416,53 +421,69 @@ public class Main {
 		System.out.println("\n*-*-*-* Event List *-*-*-*\n");
 
 		if (operation == 1) {
-			LocalDateTime lastEventDate = null;
-			for (int i = 0; i < events.size(); ++i) {
-				Event event = events.get(i);
-				if (lastEventDate == null || event.startTime.getYear() != lastEventDate.getYear()
-						|| event.startTime.getDayOfYear() != lastEventDate.getDayOfYear()) {
-					lastEventDate = event.startTime;
-					System.out.println("Events on " + lastEventDate.toLocalDate() + ":\n");
-				}
-				System.out.println(event);
-			}
+			printEventsByDay(events);
 		} else if (operation == 2) {
-			LocalDateTime lastEventDate = null;
-			TemporalField weekOfMonth = WeekFields.of(Locale.getDefault()).weekOfMonth();
-			TemporalField weekOfYear = WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear();
-			for (int i = 0; i < events.size(); ++i) {
-				Event event = events.get(i);
-				if (lastEventDate == null || event.startTime.getYear() != lastEventDate.getYear()
-						|| event.startTime.get(weekOfYear) != lastEventDate.get(weekOfYear)) {
-					lastEventDate = event.startTime;
-					System.out.println("Events on " + lastEventDate.getYear() + "-" + lastEventDate.getMonthValue()
-						+ " week " + lastEventDate.get(weekOfMonth) + ":\n");
-				}
-				System.out.println(event);
-			}
+			printEventsByWeek(events);
 		} else if (operation == 3) {
-			LocalDateTime lastEventDate = null;
-			for (int i = 0; i < events.size(); ++i) {
-				Event event = events.get(i);
-				if (lastEventDate == null || event.startTime.getYear() != lastEventDate.getYear()
-						|| event.startTime.getMonthValue() != lastEventDate.getMonthValue()) {
-					lastEventDate = event.startTime;
-					System.out.println("Events in " + lastEventDate.getYear() + "-" + lastEventDate.getMonthValue() + ":\n");
-				}
-				System.out.println(event);
-			}
+			printEventsByMonth(events);
 		} else if (operation == 4) {
-			LocalDateTime lastEventDate = null;
-			for (int i = 0; i < events.size(); ++i) {
-				Event event = events.get(i);
-				if (lastEventDate == null || event.startTime.getYear() != lastEventDate.getYear()) {
-					lastEventDate = event.startTime;
-					System.out.println("Events in " + lastEventDate.getYear() + ":\n");
-				}
-				System.out.println(event);
-			}
+			printEventsByYear(events);
 		} else {
 			System.out.println("Operation is invalid");
+		}
+	}
+
+	static void printEventsByDay(ArrayList<Event> events) {
+		LocalDateTime lastEventDate = null;
+		for (int i = 0; i < events.size(); ++i) {
+			Event event = events.get(i);
+			if (lastEventDate == null || event.startTime.getYear() != lastEventDate.getYear()
+					|| event.startTime.getDayOfYear() != lastEventDate.getDayOfYear()) {
+				lastEventDate = event.startTime;
+				System.out.println("Events on " + lastEventDate.toLocalDate() + ":\n");
+			}
+			System.out.println(event);
+		}
+	}
+
+	static void printEventsByWeek(ArrayList<Event> events) {
+		LocalDateTime lastEventDate = null;
+		TemporalField weekOfMonth = WeekFields.of(Locale.getDefault()).weekOfMonth();
+		TemporalField weekOfYear = WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear();
+		for (int i = 0; i < events.size(); ++i) {
+			Event event = events.get(i);
+			if (lastEventDate == null || event.startTime.getYear() != lastEventDate.getYear()
+					|| event.startTime.get(weekOfYear) != lastEventDate.get(weekOfYear)) {
+				lastEventDate = event.startTime;
+				System.out.println("Events on " + lastEventDate.getYear() + "-" + lastEventDate.getMonthValue()
+					+ " week " + lastEventDate.get(weekOfMonth) + ":\n");
+			}
+			System.out.println(event);
+		}
+	}
+
+	static void printEventsByMonth(ArrayList<Event> events) {
+		LocalDateTime lastEventDate = null;
+		for (int i = 0; i < events.size(); ++i) {
+			Event event = events.get(i);
+			if (lastEventDate == null || event.startTime.getYear() != lastEventDate.getYear()
+					|| event.startTime.getMonthValue() != lastEventDate.getMonthValue()) {
+				lastEventDate = event.startTime;
+				System.out.println("Events in " + lastEventDate.getYear() + "-" + lastEventDate.getMonthValue() + ":\n");
+			}
+			System.out.println(event);
+		}
+	}
+
+	static void printEventsByYear(ArrayList<Event> events) {
+		LocalDateTime lastEventDate = null;
+		for (int i = 0; i < events.size(); ++i) {
+			Event event = events.get(i);
+			if (lastEventDate == null || event.startTime.getYear() != lastEventDate.getYear()) {
+				lastEventDate = event.startTime;
+				System.out.println("Events in " + lastEventDate.getYear() + ":\n");
+			}
+			System.out.println(event);
 		}
 	}
 
@@ -521,20 +542,14 @@ public class Main {
 				return;
 			}
 
-			printEvents(false);
-			System.out.print("Please select an event for the timer (enter event ID): ");
-			UUID eventID = UUID.fromString(scanner.nextLine());
+			UUID eventID = getEventID("Please select an event for the timer (enter event ID): ");
 			Event event = calendarManager.getEvent(eventID);
 			CountdownTimer timer = new CountdownTimer(event.title, event.endTime, calendarManager.currentUser, eventID);
 			calendarManager.addTimer(timer);
 		} else {
 			System.out.print("Timer name: ");
 			String name = scanner.nextLine();
-			System.out.println();
-
-			System.out.print("Timer end time [i.e. 2017-12-03T10:15:30]: ");
-			LocalDateTime endTime = LocalDateTime.parse(scanner.nextLine());
-
+			LocalDateTime endTime = getTime("\nTimer end time [i.e. 2017-12-03T10:15:30]: ");
 			CountdownTimer timer = new CountdownTimer(name, endTime, calendarManager.currentUser, null);
 			calendarManager.addTimer(timer);
 		}
@@ -567,6 +582,12 @@ public class Main {
 			CountdownTimer timer = timers.get(i);
 			System.out.println(timer + "\n");
 		}
+	}
+
+	static LocalDateTime getTime(String query) {
+		System.out.print(query);
+		LocalDateTime time = LocalDateTime.parse(scanner.nextLine());
+		return time;
 	}
 
 }

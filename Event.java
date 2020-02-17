@@ -46,15 +46,7 @@ class Event implements Comparable<Event> {
 	void setStartTime(LocalDateTime startTime) {
 		this.startTime = startTime;
 		if (this.repeatable) {
-			// make a deep copy of repeatingEvents
-			ArrayList<UUID> events = new ArrayList<UUID>();
-			for(int i = 0; i < this.repeatingEvents.size(); ++i) {
-				events.add(this.repeatingEvents.get(i));
-			}
-
-			for (int i = 0; i < events.size(); ++i) {
-				this.calendar.removeEvent(events.get(i));
-			}
+			this.removeRepeatingEvents();
 			this.repeatEvent();
 		}
 	}
@@ -62,30 +54,14 @@ class Event implements Comparable<Event> {
 	void setEndTime(LocalDateTime endTime) {
 		this.endTime = endTime;
 		if (this.repeatable) {
-			// make a deep copy of repeatingEvents
-			ArrayList<UUID> events = new ArrayList<UUID>();
-			for(int i = 0; i < this.repeatingEvents.size(); ++i) {
-				events.add(this.repeatingEvents.get(i));
-			}
-
-			for (int i = 0; i < events.size(); ++i) {
-				this.calendar.removeEvent(events.get(i));
-			}
+			this.removeRepeatingEvents();
 			this.repeatEvent();
 		}
 	}
 
 	void setRepeatable(Boolean repeatable, LocalDateTime repeatUntil, RepeatType frequency) {
 		if (this.repeatable) {
-			// make a deep copy of repeatingEvents
-			ArrayList<UUID> events = new ArrayList<UUID>();
-			for(int i = 0; i < this.repeatingEvents.size(); ++i) {
-				events.add(this.repeatingEvents.get(i));
-			}
-
-			for (int i = 0; i < events.size(); ++i) {
-				this.calendar.removeEvent(events.get(i));
-			}
+			this.removeRepeatingEvents();
 		}
 
 		this.repeatable = repeatable;
@@ -111,7 +87,9 @@ class Event implements Comparable<Event> {
 	}
 
 	void shareEventWith(UUID userID) {
-		this.viewers.add(userID);
+		if (!this.viewers.contains(userID)) {
+			this.viewers.add(userID);
+		}
 		if (this.repeatable) {
 			for (int i = 0; i < this.repeatingEvents.size(); ++i) {
 				Event event = this.calendar.getEvent(this.repeatingEvents.get(i));
@@ -120,7 +98,7 @@ class Event implements Comparable<Event> {
 		}
 	}
 
-	void repeatEvent() {
+	private void repeatEvent() {
 		if (!this.repeatable) {
 			this.repeatingEvents = null;
 			return;
@@ -160,18 +138,37 @@ class Event implements Comparable<Event> {
 				break;
 			}
 
-			Event event = new Event(this.title, this.calendar.calendarID, this.viewers,
+			Event event = new Event(this.title, this.calendar.calendarID, this.copyViewers(),
 					eventStartTime, eventEndTime, false, null, null, this.eventID);
 			this.calendar.addEvent(event);
 			this.repeatingEvents.add(event.eventID);
 		}
 	}
 
+	private void removeRepeatingEvents() {
+		// make a deep copy of repeatingEvents
+		ArrayList<UUID> events = new ArrayList<UUID>();
+		for(int i = 0; i < this.repeatingEvents.size(); ++i) {
+			events.add(this.repeatingEvents.get(i));
+		}
+
+		for (int i = 0; i < events.size(); ++i) {
+			this.calendar.removeEvent(events.get(i));
+		}
+	}
+
+	private ArrayList<UUID> copyViewers() {
+		ArrayList<UUID> viewers = new ArrayList<UUID>();
+		for(int i = 0; i < this.viewers.size(); ++i) {
+			viewers.add(this.viewers.get(i));
+		}
+		return viewers;
+	}
+
 	@Override
 	public int compareTo(Event event) {
 		return this.startTime.compareTo(event.startTime);
 	}
-
 	public String toString() {
 		return "Event ID: " + this.eventID + "\n"
 				+ "Event Title: " + this.title + "\n"
