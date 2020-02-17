@@ -43,7 +43,7 @@ class Calendar {
 		if (removedEvent.originalEvent != null) {
 			this.getEvent(removedEvent.originalEvent).repeatingEvents.remove(removedEvent.eventID);
 		}
-		if (removedEvent.repeatable) {
+		if (removedEvent.repeatConfig.repeatable) {
 			for (int i = 0; i < removedEvent.repeatingEvents.size(); ++i) {
 				Event event = this.getEvent(removedEvent.repeatingEvents.get(i));
 				this.eventList.remove(event);

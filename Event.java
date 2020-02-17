@@ -12,30 +12,26 @@ class Event implements Comparable<Event> {
 	ArrayList<UUID> viewers;
 	LocalDateTime startTime;
 	LocalDateTime endTime;
-	Boolean repeatable;
-	LocalDateTime repeatUntil;
-	RepeatType repeatFrequency;
+	RepeatConfig repeatConfig;
 	UUID originalEvent;
 	ArrayList<UUID> repeatingEvents;
 
-	Event(String title, UUID calendarID, ArrayList<UUID> viewers, LocalDateTime startTime, LocalDateTime endTime,
-			Boolean repeatable, LocalDateTime repeatUntil, RepeatType frequency, UUID originalEvent) {
+	Event(String title, UUID calendarID, ArrayList<UUID> viewers, LocalDateTime startTime,
+			LocalDateTime endTime, RepeatConfig repeatConfig, UUID originalEvent) {
 		this.eventID = UUID.randomUUID();
 		this.title = title;
 		this.calendar = CalendarManager.getCalendarManager().getCalendar(calendarID);
 		this.viewers = viewers;
 		this.startTime = startTime;
 		this.endTime = endTime;
-		this.repeatable = repeatable;
-		this.repeatUntil = repeatUntil;
-		this.repeatFrequency = frequency;
+		this.repeatConfig = repeatConfig;
 		this.originalEvent = originalEvent;
 		this.repeatEvent();
 	}
 
 	void setEventTitle(String title) {
 		this.title = title;
-		if (this.repeatable) {
+		if (this.repeatConfig.repeatable) {
 			for (int i = 0; i < this.repeatingEvents.size(); ++i) {
 				Event event = this.calendar.getEvent(this.repeatingEvents.get(i));
 				event.setEventTitle(title);
@@ -45,7 +41,7 @@ class Event implements Comparable<Event> {
 
 	void setStartTime(LocalDateTime startTime) {
 		this.startTime = startTime;
-		if (this.repeatable) {
+		if (this.repeatConfig.repeatable) {
 			this.removeRepeatingEvents();
 			this.repeatEvent();
 		}
@@ -53,22 +49,20 @@ class Event implements Comparable<Event> {
 
 	void setEndTime(LocalDateTime endTime) {
 		this.endTime = endTime;
-		if (this.repeatable) {
+		if (this.repeatConfig.repeatable) {
 			this.removeRepeatingEvents();
 			this.repeatEvent();
 		}
 	}
 
-	void setRepeatable(Boolean repeatable, LocalDateTime repeatUntil, RepeatType frequency) {
-		if (this.repeatable) {
+	void setRepeatable(RepeatConfig repeatConfig) {
+		if (this.repeatConfig.repeatable) {
 			this.removeRepeatingEvents();
 		}
 
-		this.repeatable = repeatable;
-		this.repeatUntil = repeatUntil;
-		this.repeatFrequency = frequency;
+		this.repeatConfig = repeatConfig;
 
-		if (this.repeatable) {
+		if (this.repeatConfig.repeatable) {
 			this.repeatEvent();
 		} else {
 			this.repeatingEvents = null;
@@ -78,7 +72,7 @@ class Event implements Comparable<Event> {
 	void updateTimeByTimeZone(int timeDiff) {
 		this.startTime = this.startTime.plusHours(timeDiff);
 		this.endTime = this.endTime.plusHours(timeDiff);
-		if (this.repeatable) {
+		if (this.repeatConfig.repeatable) {
 			for (int i = 0; i < this.repeatingEvents.size(); ++i) {
 				Event event = this.calendar.getEvent(this.repeatingEvents.get(i));
 				event.updateTimeByTimeZone(timeDiff);
@@ -90,7 +84,7 @@ class Event implements Comparable<Event> {
 		if (!this.viewers.contains(userID)) {
 			this.viewers.add(userID);
 		}
-		if (this.repeatable) {
+		if (this.repeatConfig.repeatable) {
 			for (int i = 0; i < this.repeatingEvents.size(); ++i) {
 				Event event = this.calendar.getEvent(this.repeatingEvents.get(i));
 				event.shareEventWith(userID);
@@ -99,14 +93,14 @@ class Event implements Comparable<Event> {
 	}
 
 	private void repeatEvent() {
-		if (!this.repeatable) {
+		if (!this.repeatConfig.repeatable) {
 			this.repeatingEvents = null;
 			return;
 		}
 		if (this.originalEvent != null) {
 			throw new Error("Repeating events can't be repeated.");
 		}
-		if (!this.startTime.isBefore(this.repeatUntil)) {
+		if (!this.startTime.isBefore(this.repeatConfig.repeatUntil)) {
 			throw new Error("Event start time must be before end repeat time.");
 		}
 
@@ -114,32 +108,34 @@ class Event implements Comparable<Event> {
 		LocalDateTime eventStartTime = LocalDateTime.from(this.startTime);
 		LocalDateTime eventEndTime = LocalDateTime.from(this.endTime);
 
-		while (!eventStartTime.isAfter(this.repeatUntil)) {
-			if (this.repeatFrequency == RepeatType.DAILY) {
+		while (!eventStartTime.isAfter(this.repeatConfig.repeatUntil)) {
+			if (this.repeatConfig.repeatFrequency == RepeatType.DAILY) {
 				eventStartTime = eventStartTime.plusDays(1);
 				eventEndTime = eventEndTime.plusDays(1);
-			} else if (this.repeatFrequency == RepeatType.WEEKLY) {
+			} else if (this.repeatConfig.repeatFrequency == RepeatType.WEEKLY) {
 				eventStartTime = eventStartTime.plusWeeks(1);
 				eventEndTime = eventEndTime.plusWeeks(1);
-			} else if (this.repeatFrequency == RepeatType.MONTHLY) {
+			} else if (this.repeatConfig.repeatFrequency == RepeatType.MONTHLY) {
 				eventStartTime = eventStartTime.plusMonths(1);
 				eventEndTime = eventEndTime.plusMonths(1);
-			} else if (this.repeatFrequency == RepeatType.QUARTERLY) {
+			} else if (this.repeatConfig.repeatFrequency == RepeatType.QUARTERLY) {
 				eventStartTime = eventStartTime.plusMonths(3);
 				eventEndTime = eventEndTime.plusMonths(3);
-			} else if (this.repeatFrequency == RepeatType.ANNUALLY) {
+			} else if (this.repeatConfig.repeatFrequency == RepeatType.ANNUALLY) {
 				eventStartTime = eventStartTime.plusYears(1);
 				eventEndTime = eventEndTime.plusYears(1);
 			} else {
 				throw new Error("The repeat frequency is undefined");
 			}
 
-			if (eventStartTime.isAfter(this.repeatUntil)) {
+			if (eventStartTime.isAfter(this.repeatConfig.repeatUntil)) {
 				break;
 			}
 
+			RepeatConfig repeatConfig = new RepeatConfig(false, null, null);
+
 			Event event = new Event(this.title, this.calendar.calendarID, this.copyViewers(),
-					eventStartTime, eventEndTime, false, null, null, this.eventID);
+					eventStartTime, eventEndTime, repeatConfig, this.eventID);
 			this.calendar.addEvent(event);
 			this.repeatingEvents.add(event.eventID);
 		}
@@ -193,20 +189,20 @@ class Event implements Comparable<Event> {
 
 	private String repeatEventString() {
 		String repeatString = "";
-		if (this.repeatable) {
+		if (this.repeatConfig.repeatable) {
 			repeatString += "This event repeats every ";
-			if (this.repeatFrequency == RepeatType.DAILY) {
+			if (this.repeatConfig.repeatFrequency == RepeatType.DAILY) {
 				repeatString += "day ";
-			} else if (this.repeatFrequency == RepeatType.WEEKLY) {
+			} else if (this.repeatConfig.repeatFrequency == RepeatType.WEEKLY) {
 				repeatString += "week ";
-			} else if (this.repeatFrequency == RepeatType.MONTHLY) {
+			} else if (this.repeatConfig.repeatFrequency == RepeatType.MONTHLY) {
 				repeatString += "month ";
-			} else if (this.repeatFrequency == RepeatType.QUARTERLY) {
+			} else if (this.repeatConfig.repeatFrequency == RepeatType.QUARTERLY) {
 				repeatString += "quarter ";
 			} else {
 				repeatString += "year ";
 			}
-			repeatString += "until " + this.repeatUntil + "\n";
+			repeatString += "until " + this.repeatConfig.repeatUntil + "\n";
 		}
 		return repeatString;
 	}

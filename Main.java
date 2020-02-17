@@ -210,46 +210,15 @@ public class Main {
 		LocalDateTime endTime = getTime("End time [i.e. 2017-12-03T11:15:30]: ");
 		System.out.println();
 
-		System.out.print("Is this event repeatable (Y/N): ");
-		Boolean repeatable = scanner.nextLine().equals("Y") ? true : false;
+		RepeatConfig repeatConfig = getRepeatConfig("Is this event repeatable (Y/N): ");
 		System.out.println();
-
-		LocalDateTime repeatUntil = null;
-		RepeatType frequency = null;
-
-		if (repeatable) {
-			repeatUntil = getTime("Repeat until [i.e. 2018-12-03T10:15:30]: ");
-			System.out.println();
-
-			System.out.println("Repeat frequency:\n\n"
-					+ "[1] Daily\n"
-					+ "[2] Weekly\n"
-					+ "[3] Monthly\n"
-					+ "[4] Quarterly\n"
-					+ "[5] Annually\n");
-			System.out.print("Please select a repeat frequency (enter the number): ");
-			int freq = Integer.parseInt(scanner.nextLine());
-			if (freq == 1) {
-				frequency = RepeatType.DAILY;
-			} else if (freq == 2) {
-				frequency = RepeatType.WEEKLY;
-			} else if (freq == 3) {
-				frequency = RepeatType.MONTHLY;
-			} else if (freq == 4) {
-				frequency = RepeatType.QUARTERLY;
-			} else {
-				frequency = RepeatType.ANNUALLY;
-			}
-			System.out.println();
-		}
 
 		UUID calendarID = getCalendarID("Add to which calendar (enter calendar ID): ");
 		System.out.println();
 
 		ArrayList<UUID> viewers = getEventViewers();
 
-		Event event = new Event(eventTitle, calendarID, viewers, startTime, endTime,
-				repeatable, repeatUntil, frequency, null);
+		Event event = new Event(eventTitle, calendarID, viewers, startTime, endTime, repeatConfig, null);
 		calendarManager.addEvent(event, calendarID);
 
 		System.out.println("Event is added!\n");
@@ -316,39 +285,8 @@ public class Main {
 			event.setEndTime(endTime);
 			System.out.println("Event's end time is changed to " + event.endTime);
 		} else if (operation == 4) {
-			System.out.print("Do you want to set the event as repeatable (Y/N): ");
-			Boolean repeatable = scanner.nextLine().equals("Y") ? true : false;
-			System.out.println();
-
-			LocalDateTime repeatUntil = null;
-			RepeatType frequency = null;
-
-			if (repeatable) {
-				repeatUntil = getTime("Repeat until [i.e. 2020-12-01T14:00:00]: ");
-				System.out.println();
-
-				System.out.println("Repeat frequency:\n\n"
-						+ "[1] Daily\n"
-						+ "[2] Weekly\n"
-						+ "[3] Monthly\n"
-						+ "[4] Quarterly\n"
-						+ "[5] Annually\n");
-				System.out.print("Please select a repeat frequency (enter the number): ");
-				int freq = Integer.parseInt(scanner.nextLine());
-				if (freq == 1) {
-					frequency = RepeatType.DAILY;
-				} else if (freq == 2) {
-					frequency = RepeatType.WEEKLY;
-				} else if (freq == 3) {
-					frequency = RepeatType.MONTHLY;
-				} else if (freq == 4) {
-					frequency = RepeatType.QUARTERLY;
-				} else {
-					frequency = RepeatType.ANNUALLY;
-				}
-			}
-
-			event.setRepeatable(repeatable, repeatUntil, frequency);
+			RepeatConfig repeatConfig = getRepeatConfig("Do you want to set the event as repeatable (Y/N): ");
+			event.setRepeatable(repeatConfig);
 			System.out.println("Event's repeating settings have been changed!");
 		} else {
 			System.out.println("Operation is invalid");
@@ -400,6 +338,42 @@ public class Main {
 		System.out.print(query);
 		UUID eventID = UUID.fromString(scanner.nextLine());
 		return eventID;
+	}
+
+	static RepeatConfig getRepeatConfig(String query) {
+		System.out.print(query);
+		Boolean repeatable = scanner.nextLine().equals("Y") ? true : false;
+		System.out.println();
+
+		LocalDateTime repeatUntil = null;
+		RepeatType frequency = null;
+
+		if (repeatable) {
+			repeatUntil = getTime("Repeat until [i.e. 2018-12-03T10:15:30]: ");
+			System.out.println();
+
+			System.out.println("Repeat frequency:\n\n"
+					+ "[1] Daily\n"
+					+ "[2] Weekly\n"
+					+ "[3] Monthly\n"
+					+ "[4] Quarterly\n"
+					+ "[5] Annually\n");
+			System.out.print("Please select a repeat frequency (enter the number): ");
+			int freq = Integer.parseInt(scanner.nextLine());
+			if (freq == 1) {
+				frequency = RepeatType.DAILY;
+			} else if (freq == 2) {
+				frequency = RepeatType.WEEKLY;
+			} else if (freq == 3) {
+				frequency = RepeatType.MONTHLY;
+			} else if (freq == 4) {
+				frequency = RepeatType.QUARTERLY;
+			} else {
+				frequency = RepeatType.ANNUALLY;
+			}
+		}
+
+		return new RepeatConfig(repeatable, repeatUntil, frequency);
 	}
 
 	static void printEvents(Boolean includePublic) {
