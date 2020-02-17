@@ -115,6 +115,16 @@ class CalendarManager {
 		return calendars;
 	}
 
+	void addEvent(Event event, UUID calendarID) {
+		Calendar calendar = this.getCalendar(calendarID);
+		calendar.addEvent(event);
+	}
+
+	void removeEvent(UUID eventID) {
+		Event removedEvent = this.getEvent(eventID);
+		removedEvent.calendar.removeEvent(eventID);
+	}
+
 	Event getEvent(UUID eventID) {
 		for (int i = 0; i < this.calendarList.size(); ++i) {
 			ArrayList<Event> events = this.calendarList.get(i).eventList;

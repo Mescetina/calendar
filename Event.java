@@ -18,11 +18,11 @@ class Event implements Comparable<Event> {
 	UUID originalEvent;
 	ArrayList<UUID> repeatingEvents;
 
-	Event(String title, Calendar calendar, ArrayList<UUID> viewers, LocalDateTime startTime, LocalDateTime endTime,
+	Event(String title, UUID calendarID, ArrayList<UUID> viewers, LocalDateTime startTime, LocalDateTime endTime,
 			Boolean repeatable, LocalDateTime repeatUntil, RepeatType frequency, UUID originalEvent) {
 		this.eventID = UUID.randomUUID();
 		this.title = title;
-		this.calendar = calendar;
+		this.calendar = CalendarManager.getCalendarManager().getCalendar(calendarID);
 		this.viewers = viewers;
 		this.startTime = startTime;
 		this.endTime = endTime;
@@ -160,7 +160,7 @@ class Event implements Comparable<Event> {
 				break;
 			}
 
-			Event event = new Event(this.title, this.calendar, this.viewers,
+			Event event = new Event(this.title, this.calendar.calendarID, this.viewers,
 					eventStartTime, eventEndTime, false, null, null, this.eventID);
 			this.calendar.addEvent(event);
 			this.repeatingEvents.add(event.eventID);

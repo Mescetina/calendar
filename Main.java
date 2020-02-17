@@ -245,7 +245,6 @@ public class Main {
 		printCalendars(false);
 		System.out.print("Add to which calendar (enter calendar ID): ");
 		UUID calendarID = UUID.fromString(scanner.nextLine());
-		Calendar calendar = calendarManager.getCalendar(calendarID);
 		System.out.println();
 
 		System.out.print("Do you want to share this event (Y/N): ");
@@ -269,9 +268,9 @@ public class Main {
 			System.out.println();
 		}
 
-		Event event = new Event(eventTitle, calendar, viewers, startTime, endTime,
+		Event event = new Event(eventTitle, calendarID, viewers, startTime, endTime,
 				repeatable, repeatUntil, frequency, null);
-		calendar.addEvent(event);
+		calendarManager.addEvent(event, calendarID);
 
 		System.out.println("Event is added!\n");
 	}
@@ -285,7 +284,7 @@ public class Main {
 		printEvents(false);
 		System.out.print("Please select an event to delete (enter event ID): ");
 		UUID eventID = UUID.fromString(scanner.nextLine());
-		calendarManager.getEvent(eventID).calendar.removeEvent(eventID);
+		calendarManager.removeEvent(eventID);
 		System.out.println("Event is deleted!\n");
 	}
 
